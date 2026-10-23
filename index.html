@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brand Exposure Dashboard – Dark Web Threat Intel Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ecef;--panel:#fff;--ink:#16233b;--mute:#5d6b82;--line:#cfd6df;--cob:#2f5bea;--crit:#c2273d;--high:#d9731a;--med:#d9a50b;--low:#4b8f6a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101826;--panel:#18233a;--ink:#e6ebf4;--mute:#93a2bd;--line:#2c3a56;--cob:#6f93ff}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Schibsted Grotesk",system-ui,sans-serif}
+header{padding:18px 24px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+h1{font-size:20px;margin:0;font-weight:800}h1 small{display:block;font-weight:400;color:var(--mute);font-size:13px}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+button{font:inherit;font-weight:600;padding:8px 14px;border:0;border-radius:6px;background:var(--cob);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible,select:focus-visible,tr:focus-visible{outline:2px solid var(--cob);outline-offset:2px}
+main{padding:20px 24px;display:grid;gap:16px;max-width:1280px;margin:auto}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px}
+h2{font-size:15px;margin:0 0 10px}
+.pipe{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.stage{flex:1;min-width:120px;padding:10px;border:1px solid var(--line);border-radius:6px}
+.stage b{display:block;font-size:20px}.stage span{font-size:12px;color:var(--mute)}
+.stage.on{border-color:var(--cob);box-shadow:inset 0 0 0 1px var(--cob)}
+.grid{display:grid;grid-template-columns:260px 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.score{font-size:64px;font-weight:800;line-height:1}
+.bar{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--low),var(--med),var(--high),var(--crit));position:relative;margin:12px 0 4px}
+.bar i{position:absolute;top:-4px;width:4px;height:18px;background:var(--ink);border-radius:2px;transition:left .4s}
+.row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}.row .l{width:128px;color:var(--mute)}
+.row .t{flex:1;background:var(--bg);height:12px;border-radius:3px;overflow:hidden}.row .t div{height:100%;background:var(--cob);width:0;transition:width .4s}
+.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:640px;font-size:13px}
+th{text-align:left;color:var(--mute);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid var(--line)}tbody tr{cursor:pointer}tbody tr:hover,tr.sel{background:var(--bg)}
+.sev{display:inline-block;padding:1px 8px;border-radius:10px;color:#fff;font-size:12px;font-weight:600}
+.Critical{background:var(--crit)}.High{background:var(--high)}.Medium{background:var(--med);color:#222}.Low{background:var(--low)}
+pre{white-space:pre-wrap;background:var(--bg);padding:10px;border-radius:6px;font-size:12.5px;margin:6px 0}
+mark{background:#ffe27a;color:#222;padding:0 2px;border-radius:2px}
+.chip{display:inline-block;border:1px solid var(--line);border-radius:4px;padding:1px 6px;margin:2px;font-size:12px}
+.two{display:grid;grid-template-columns:1.6fr 1fr;gap:16px}@media(max-width:900px){.two{grid-template-columns:1fr}}
+.note{font-size:12px;color:var(--mute)}
+</style></head><body>
+<header>
+<h1>Brand Exposure Dashboard<small>Dark web threat intelligence ingestion engine · demo with synthetic data</small></h1>
+<div class="ctl">
+<label>Brand <input id="brand" value="Acme Corp" aria-label="Brand name"></label>
+<label>Domain <input id="dom" value="acmecorp.com" aria-label="Primary domain"></label>
+<button id="run">Start ingestion</button><button class="alt" id="reset">Reset</button>
+</div></header>
+<main>
+<section class="panel" aria-label="Ingestion pipeline"><h2>Ingestion pipeline</h2>
+<div class="pipe" id="pipe"></div>
+<p class="note">Collectors pull from forums, marketplaces, paste sites and chat channels. Everything below is generated locally for demonstration; no real dark web access takes place.</p></section>
+<div class="grid">
+<section class="panel"><h2>Exposure score</h2><div class="score" id="score">0</div><div class="note" id="level">No data yet</div>
+<div class="bar"><i id="mark" style="left:0"></i></div>
+<div class="note">0 safe · 100 severe. Weighted by severity, source credibility and recency.</div></section>
+<section class="panel"><h2>Exposure by category</h2><div id="cats"></div></section>
+<section class="panel"><h2>Exposure by source type</h2><div id="srcs"></div></section>
+</div>
+<div class="two">
+<section class="panel"><h2>Findings</h2>
+<div class="ctl" style="margin-bottom:8px"><label>Severity <select id="f"><option>All</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></label><span class="note" id="count"></span></div>
+<div class="wrap"><table><thead><tr><th>Time</th><th>Source</th><th>Category</th><th>Match</th><th>Score</th><th>Severity</th></tr></thead><tbody id="tb"></tbody></table></div></section>
+<section class="panel" aria-live="polite"><h2>Finding detail</h2><div id="detail" class="note">Select a finding to see the raw post, extracted indicators and why it was scored this way.</div></section>
+</div></main>
+<script>
+const $=id=>document.getElementById(id);
+const STAGES=["Collected","Normalized","Entities extracted","Brand-matched","Scored & alerted"];
+const SRC={forum:{n:"Hacking forum",c:.8},market:{n:"Marketplace",c:.9},paste:{n:"Paste site",c:.5},chat:{n:"Chat channel",c:.6}};
+const CAT={creds:{n:"Leaked credentials",w:90},db:{n:"Database for sale",w:100},phish:{n:"Phishing kit / typosquat",w:75},mention:{n:"Brand mention / chatter",w:30},access:{n:"Initial access sale",w:95}};
+const T=[
+ ["creds","paste","Combo list dump: jdoe@{d}:Winter2024! , asmith@{d}:Passw0rd#1 , cluster of 4,200 lines"],
+ ["db","market","Selling {b} customer database, 1.2M rows, emails + hashed passwords. Contact via Jabber. Proof sample at hxxp://{d}.leak"],
+ ["access","forum","WTF access: VPN admin on {d} network, domain admin privileges, $3,500 escrow only"],
+ ["phish","forum","New phishing kit ready: login page cloned for {t}, hosting included"],
+ ["mention","chat","anyone have a way into {b}? heard their helpdesk is weak"],
+ ["creds","chat","fresh logs: vpn@{d} cookies session tokens from stealer malware"],
+ ["phish","paste","Registered lookalike domain {t} – campaign targets {b} employees via SMS"],
+ ["mention","forum","{b} quarterly report leaked on pastebin? someone confirm"],
+ ["db","paste","dump: invoices export from {d} ERP, 85k records, customer@{d} included"],
+ ["mention","market","looking for insiders at {b}, high pay, remote tasks"]];
+let S,timer;
+function lev(a,b){const m=[...Array(a.length+1)].map((_,i)=>[i]);for(let j=1;j<=b.length;j++)m[0][j]=j;
+ for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]==b[j-1]?0:1));return m[a.length][b.length]}
+function rnd(){S.seed=(S.seed*1664525+1013904223)%4294967296;return S.seed/4294967296}
+function typo(d){const[n,t]=d.split(/\.(.*)/);const v=[n.replace(/o/,"0"),n+"-secure",n.slice(0,-1),n.replace(/c/,"k")];return v[Math.floor(rnd()*v.length)]+"."+t}
+function extract(text,d){ // real regex-based entity extraction
+ const e={emails:text.match(/[\w.+-]+@[\w-]+\.[a-z]{2,}/gi)||[],domains:text.match(/\b[\w-]+\.(?:com|net|org|leak|io)\b/gi)||[],
+ creds:text.match(/[\w.+-]+@[\w.-]+:\S+/g)||[],price:text.match(/\$[\d,]+/g)||[],vol:text.match(/[\d,.]+[MKk]?\s?(?:rows|records|lines)/gi)||[]};
+ e.domains=[...new Set(e.domains)];return e}
+function match(text,e,brand,d){
+ const root=d.split(".")[0].toLowerCase(),r=[];
+ if(text.toLowerCase().includes(d.toLowerCase()))r.push(["Exact domain",1]);
+ if(text.toLowerCase().includes(brand.toLowerCase()))r.push(["Brand name",.9]);
+ e.domains.forEach(x=>{const xr=x.split(".")[0].toLowerCase();if(xr!==root&&lev(xr,root)<=3&&lev(xr,root)>0)r.push(["Typosquat: "+x+" (edit distance "+lev(xr,root)+")",.85])});
+ return r}
+function score(cat,src,conf,age){const w=CAT[cat].w,c=SRC[src].c,rec=Math.max(.5,1-age/72);return{v:Math.round(w*c*conf*rec*1.1>100?100:w*c*conf*rec*1.1),w,c,conf,rec}}
+const sevOf=v=>v>=65?"Critical":v>=50?"High":v>=30?"Medium":"Low";
+function mk(i){const brand=$("brand").value,d=$("dom").value,[cat,src,tpl]=T[Math.floor(rnd()*T.length)],t=typo(d);
+ const text=tpl.replace(/{b}/g,brand).replace(/{d}/g,d).replace(/{t}/g,t);
+ const e=extract(text,d),m=match(text,e,brand,d);const age=Math.floor(rnd()*60)+1;
+ const f={id:i,time:age+"h ago",age,cat,src,text,e,m};
+ if(!m.length){f.skip=true;return f}
+ f.conf=Math.max(...m.map(x=>x[1]));f.s=score(cat,src,f.conf,age);f.sev=sevOf(f.s.v);return f}
+function pipe(){$("pipe").innerHTML=STAGES.map((s,i)=>`<div class="stage ${S.on===i?"on":""}"><b>${S.c[i]}</b><span>${s}</span></div>`).join("")}
+function render(){
+ pipe();const hit=S.items.filter(x=>!x.skip);
+ const raw=hit.reduce((a,x)=>a+x.s.v,0);const sc=Math.min(100,Math.round(Math.sqrt(raw)*5.2));
+ $("score").textContent=sc;$("mark").style.left=sc+"%";$("level").textContent=hit.length?sevOf(sc+15)+" exposure · "+hit.length+" matched findings":"No data yet";
+ const bars=(id,obj,key)=>{const cnt={};hit.forEach(x=>cnt[x[key]]=(cnt[x[key]]||0)+1);const mx=Math.max(1,...Object.values(cnt));
+  $(id).innerHTML=Object.keys(obj).map(k=>`<div class="row"><span class="l">${obj[k].n}</span><span class="t"><div style="width:${(cnt[k]||0)/mx*100}%"></div></span><b>${cnt[k]||0}</b></div>`).join("")};
+ bars("cats",CAT,"cat");bars("srcs",SRC,"src");
+ const f=$("f").value,rows=hit.filter(x=>f=="All"||x.sev==f).sort((a,b)=>b.s.v-a.s.v);
+ $("count").textContent=rows.length+" shown";
+ $("tb").innerHTML=rows.map(x=>`<tr tabindex="0" data-i="${x.id}" class="${S.sel===x.id?"sel":""}"><td>${x.time}</td><td>${SRC[x.src].n}</td><td>${CAT[x.cat].n}</td><td>${x.m[0][0]}</td><td>${x.s.v}</td><td><span class="sev ${x.sev}">${x.sev}</span></td></tr>`).join("")}
+function detail(id){const x=S.items.find(i=>i.id==id);S.sel=id;
+ const hl=x.text.replace(new RegExp("("+[$("brand").value,$("dom").value,...x.e.domains].map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")","gi"),"<mark>$1</mark>");
+ const ch=(a)=>a.length?a.map(v=>`<span class="chip">${v.replace(/</g,"&lt;")}</span>`).join(""):"<span class='note'>none</span>";
+ $("detail").innerHTML=`<span class="sev ${x.sev}">${x.sev} · ${x.s.v}/100</span><pre>${hl}</pre>
+ <b>Extracted indicators</b><div>Emails: ${ch(x.e.emails)}</div><div>Domains: ${ch(x.e.domains)}</div><div>Credential pairs: ${ch(x.e.creds.map(c=>c.split(":")[0]+":••••"))}</div><div>Price / volume: ${ch([...x.e.price,...x.e.vol])}</div>
+ <p><b>Why it matched</b><br>${x.m.map(m=>m[0]).join("<br>")}</p>
+ <p><b>Score breakdown</b><br><span class="note">category weight ${x.s.w} × source credibility ${x.s.c} × match confidence ${x.s.conf} × recency ${x.s.rec.toFixed(2)} = ${x.s.v}</span></p>
+ <p><b>Recommended action</b><br>${{creds:"Force password reset, revoke sessions, enable MFA.",db:"Open incident, verify sample, notify legal/DPO.",phish:"Request domain takedown, block at DNS/email gateway.",mention:"Monitor; no immediate action.",access:"Rotate VPN/admin credentials, hunt for intrusion, isolate."}[x.cat]}</p>`;render()}
+function step(){if(S.n>=S.total){clearInterval(timer);S.on=-1;$("run").disabled=false;render();return}
+ const it=mk(S.n++);S.items.push(it);S.c[0]++;S.c[1]++;S.c[2]++;if(!it.skip){S.c[3]++;S.c[4]++}S.on=it.skip?2:4;render()}
+function reset(){clearInterval(timer);S={items:[],c:[0,0,0,0,0],n:0,total:45,on:-1,seed:42,sel:null};$("run").disabled=false;$("detail").textContent="Select a finding to see the raw post, extracted indicators and why it was scored this way.";render()}
+$("run").onclick=()=>{reset();$("run").disabled=true;timer=setInterval(step,150)};
+$("reset").onclick=reset;$("f").onchange=render;
+$("tb").addEventListener("click",e=>{const r=e.target.closest("tr");if(r)detail(r.dataset.i)});
+$("tb").addEventListener("keydown",e=>{if(e.key=="Enter"){const r=e.target.closest("tr");if(r)detail(r.dataset.i)}});
+reset();
+</script></body></html>
